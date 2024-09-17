@@ -1,0 +1,9 @@
+csv_file_path: 'data/recipe_sample_inf_dfl_merged.csv'
+save_path: 'output/recipe_sample_inf_edit_distance.csv'
+eval_method: 'edit_distance'
+
+reference_col: 'ingredients'
+prediction_col: 'gen_ingredients'
+dfl_prediction_col: 'gen_ingredients_dfl'
+
+text_save_path: 'output/summary.text'

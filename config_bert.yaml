@@ -1,0 +1,9 @@
+csv_file_path: 'data/recipe_sample_inf_dfl_merged.csv'
+save_path: 'output/recipe_sample_inf_bert_score.csv'
+eval_method: 'bert_score'
+
+reference_col: 'ingredients'
+prediction_col: 'gen_ingredients'
+dfl_prediction_col: 'gen_ingredients_dfl'
+
+text_save_path: 'output/summary_bert.text'
