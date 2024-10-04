@@ -1,9 +1,14 @@
-csv_file_path: 'data/recipe_sample_inf_dfl_merged.csv'
-save_path: 'output/recipe_sample_inf_bert_score.csv'
+bucket_name: bs-llm-sandbox
+input_file_path: 'keenanh/dfl-eval-tests/prompts_responses_finetuned.csv'
+save_path: 'keenanh/dfl-eval-tests/recipe_sample_inf_bert_score.csv'
+text_save_path: 'keenanh/dfl-eval-tests/output/summary_bert.text'
 eval_method: 'bert_score'
 
-reference_col: 'ingredients'
-prediction_col: 'gen_ingredients'
-dfl_prediction_col: 'gen_ingredients_dfl'
+reference_col: 'real'
+modell_response_col: 'response'
+modelr_response_col: 'dfl_response'
 
-text_save_path: 'output/summary_bert.text'
+aws_credentials: 
+  aws_access_key_id: 'ASIAZI2LFWLVIYCTWZFH'
+  aws_secret_access_key: 'Jbk9OfoDCo1eERdon1eYf0WAupZAHsGy0qOpf0WV'
+  aws_region: 'us-east-1'

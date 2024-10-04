@@ -1,6 +1,7 @@
 import os
 import argparse
 import yaml
+from .util import upload_dataframe_to_s3, upload_text_to_s3, download_CSV_to_dataframe
 
 import numpy as np
 import pandas as pd
@@ -48,7 +49,7 @@ def main(yaml_file_path):
     if not config.get("csv_file_path").lower().endswith('.csv'):
         print("Error: The provided file is not a CSV file.")
         return
-    df = pd.read_csv(config.get("csv_file_path"))
+    df = download_CSV_to_dataframe(config.get("bucket_name"),config.get("csv_file_path"),config.get("aws_access_key_id"),config.get("aws_secret_access_key"),config.get("aws_region"))
 
     ## EVALUATE using edit distance method
     if config.get("eval_method") == 'edit_distance':
@@ -56,33 +57,34 @@ def main(yaml_file_path):
         evaluator = load_evaluator("string_distance")
 
         def evaluate_distance(row, reference_col, gen_col):
-            return evaluator.evaluate_strings(reference=row[reference_col], prediction=row[gen_col])['score']
+            return evaluator.evaluate_strings(reference=row[reference_col], modell_response=row[gen_col])['score']
         # evaluate
-        df['distance_gen'] = df.apply(lambda row: evaluate_distance(row, config.get("reference_col"), config.get("prediction_col")), axis=1)
-        df['distance_gen_dfl'] = df.apply(lambda row: evaluate_distance(row, config.get("reference_col"), config.get("dfl_prediction_col")), axis=1)
+        df['distance_gen'] = df.apply(lambda row: evaluate_distance(row, config.get("reference_col"), config.get("modell_response_col")), axis=1)
+        df['distance_gen_dfl'] = df.apply(lambda row: evaluate_distance(row, config.get("reference_col"), config.get("modelr_response_col")), axis=1)
         
         # write summary output file
-        generate_text_file(df, config.get("text_save_path"), config.get("eval_method"), ['distance_gen', 'distance_gen_dfl'])
+        upload_text_to_s3(df, config.get("bucket_name"), config.get("aws_access_key_id"), config.get("aws_secret_access_key"),config.get("aws_region"), config.get("text_save_path"), config.get("eval_method"), ['modell_distance_gen', 'modelr_distance_gen'])
     
     elif config.get("eval_method") == 'bert_score':
         bertscore = load("bertscore")
-        result = bertscore.compute(predictions=df[config.get("prediction_col")], references=df[config.get("reference_col")],lang="en")
+        result = bertscore.compute(predictions=df[config.get("modell_response_col")], references=df[config.get("reference_col")],lang="en")
         df['BERTscore_precision'] = result['precision']
         df['BERTscore_recall'] = result['recall']
         df['BERTscore_F1'] = result['f1']
 
-        result_dfl = bertscore.compute(predictions=df[config.get("dfl_prediction_col")], references=df[config.get("reference_col")],lang="en")
+        result_dfl = bertscore.compute(predictions=df[config.get("modelr_response_col")], references=df[config.get("reference_col")],lang="en")
         df['dfl_BERTscore_precision'] = result_dfl['precision']
         df['dfl_BERTscore_recall'] = result_dfl['recall']
         df['dfl_BERTscore_F1'] = result_dfl['f1']
 
         # write summary output file
         cols = ['BERTscore_precision', 'BERTscore_recall', 'BERTscore_F1', 'dfl_BERTscore_precision', 'dfl_BERTscore_recall', 'dfl_BERTscore_F1']
-        generate_text_file(df, config.get("text_save_path"), config.get("eval_method"), cols)
+        upload_text_to_s3(df, config.get("bucket_name"), config.get("aws_access_key_id"), config.get("aws_secret_access_key"),config.get("aws_region"), config.get("text_save_path"), config.get("eval_method"), cols)
     else:
         print("Eval method not yet implemented")
     
     # save final dataframe
+    upload_dataframe_to_s3(df,  config.get("bucket_name"), config.get("aws_access_key_id"), config.get("aws_secret_access_key"),config.get("aws_region"),config.get("save_path"))
     df.to_csv(config.get("save_path"), index=False)
     return
 
